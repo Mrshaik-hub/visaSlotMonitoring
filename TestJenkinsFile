@@ -6,8 +6,8 @@ pipeline {
     }
 
     tools {
-        maven 'linux/maven:Latest'      // Make sure this matches your Jenkins tool name exactly
-        jdk 'linux/jdk11:Latest'        // Ditto here
+        maven 'maven'      // Make sure this matches your Jenkins tool name exactly
+        jdk 'jdk17'        // Ditto here
     }
 
     parameters {
