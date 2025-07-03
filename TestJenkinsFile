@@ -1,13 +1,9 @@
 pipeline {
-    agent {
-        node {
-            label 'cm-linux'
-        }
-    }
+    agent any
 
     tools {
-        maven 'maven'      // Make sure this matches your Jenkins tool name exactly
-        jdk 'jdk17'        // Ditto here
+        maven 'maven'      // Use the exact name as in Global Tool Configuration
+        jdk 'jdk17'        // Use the exact name as in Global Tool Configuration
     }
 
     parameters {
@@ -34,8 +30,7 @@ pipeline {
         stage('Setup Domain') {
             steps {
                 script {
-                    // Defensive: Only set DOMAIN if GIT_URL is defined
-                    if (env.GIT_URL && env.GIT_URL.contains('account-information')) {
+                    if (env.GIT_URL && env.GIT_URL.contains('visa')) {
                         env.DOMAIN = "IS-${params.TagName ?: ''}"
                     }
                 }
