@@ -133,4 +133,4 @@ pipeline {
         always {
             echo "Build completed with status: ${currentBuild.result ?: 'SUCCESS'}"
             def status = currentBuild.result ?: 'SUCCESS'
-            def reportLink = "${env.BUILD_URL}artifact/
+            
