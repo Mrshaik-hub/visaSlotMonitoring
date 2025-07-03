@@ -6,8 +6,8 @@ pipeline {
     }
 
     tools {
-        maven 'linux/maven:Latest'
-        jdk 'linux/jdk11:Latest'
+        maven 'linux/maven:Latest'      // Make sure this matches your Jenkins tool name exactly
+        jdk 'linux/jdk11:Latest'        // Ditto here
     }
 
     parameters {
@@ -34,8 +34,9 @@ pipeline {
         stage('Setup Domain') {
             steps {
                 script {
-                    if (env.GIT_URL?.contains('account-information')) {
-                        env.DOMAIN = "IS-${params.TagName}"
+                    // Defensive: Only set DOMAIN if GIT_URL is defined
+                    if (env.GIT_URL && env.GIT_URL.contains('account-information')) {
+                        env.DOMAIN = "IS-${params.TagName ?: ''}"
                     }
                 }
             }
@@ -69,9 +70,7 @@ pipeline {
         stage('Start BrowserstackLocal') {
             when { expression { params.host != 'grid' } }
             steps {
-                script {
-                    echo 'Skipping BrowserStack setup for local runs (no need)'
-                }
+                echo 'Skipping BrowserStack setup for local runs (no need)'
             }
         }
 
@@ -92,7 +91,7 @@ pipeline {
                         """
                         echo 'Visa Slot Monitoring Completed'
                     } catch (e) {
-                        echo "Visa Slot Monitoring Failed: ${e.message}"
+                        echo "Visa Slot Monitoring Failed: ${e.getMessage()}"
                         currentBuild.result = 'FAILURE'
                     }
                 }
@@ -104,7 +103,8 @@ pipeline {
                 script {
                     try {
                         def reportHtml = readFile('target/cucumber-html-reports/overview-features.html')
-                        def table = (reportHtml =~ /(<table[\s\S]*?<\/table>)/)[0]
+                        def tableMatch = (reportHtml =~ /(<table[\s\S]*?<\/table>)/)
+                        def table = tableMatch ? tableMatch[0] : '<p>No table found in report!</p>'
                         table = table
                             .replaceAll(/<table\b[^>]*>/, '<table border="1" style="border-collapse: collapse; width: 100%;">')
                             .replaceAll(/<td\b[^>]*>/, '<td border="1">')
@@ -123,7 +123,7 @@ pipeline {
                         """
                         archiveArtifacts artifacts: 'summary_report.html', fingerprint: true
                     } catch (err) {
-                        echo "Report generation failed: ${err.message}"
+                        echo "Report generation failed: ${err.getMessage()}"
                     }
                 }
             }
@@ -133,9 +133,9 @@ pipeline {
     post {
         always {
             script {
-                echo "Build completed with status: ${currentBuild.result ?: 'SUCCESS'}"
                 def status = currentBuild.result ?: 'SUCCESS'
                 def reportLink = "${env.BUILD_URL}artifact/summary_report.html"
+                echo "Build completed with status: ${status}"
 
                 emailext(
                     to: 'shaikmahaboobsubhani00@gmail.com',
