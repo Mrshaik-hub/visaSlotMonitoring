@@ -131,6 +131,40 @@ pipeline {
 
     post {
         always {
-            echo "Build completed with status: ${currentBuild.result ?: 'SUCCESS'}"
-            def status = currentBuild.result ?: 'SUCCESS'
-            
+            script {
+                echo "Build completed with status: ${currentBuild.result ?: 'SUCCESS'}"
+                def status = currentBuild.result ?: 'SUCCESS'
+                def reportLink = "${env.BUILD_URL}artifact/summary_report.html"
+
+                emailext(
+                    to: 'shaikmahaboobsubhani00@gmail.com',
+                    subject: "Visa Slot Monitor - Execution Summary | Build #${env.BUILD_NUMBER} | ${status}",
+                    body: """
+                        <html>
+                          <body>
+                            <h2>Visa Slot Monitoring - Execution Summary</h2>
+                            <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                              <tr><th>Execution Tag</th><td>${params.TagName}</td></tr>
+                              <tr><th>Environment</th><td>${params.ENVIRONMENT}</td></tr>
+                              <tr><th>Branch</th><td>${params.branch}</td></tr>
+                              <tr><th>MRS Value</th><td>${params.MRS_VALUE}</td></tr>
+                              <tr><th>MRT Value</th><td>${params.MRT_VALUE}</td></tr>
+                              <tr><th>Host</th><td>${params.host}</td></tr>
+                              <tr><th>Headless Mode</th><td>${params.HEADLESS_MODE}</td></tr>
+                              <tr><th>Status</th><td><b style="color:${status == 'SUCCESS' ? 'green' : 'red'};">${status}</b></td></tr>
+                            </table>
+                            <br/>
+                            <p>Full Report: <a href="${reportLink}">Click here to view the complete HTML report</a></p>
+                            <br/>
+                            <p>Kindly contact <b>hshaik</b> for any queries.</p>
+                            <p>Thanks,<br/>Jenkins</p>
+                          </body>
+                        </html>
+                    """,
+                    mimeType: 'text/html',
+                    attachLog: true
+                )
+            }
+        }
+    }
+}
