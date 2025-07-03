@@ -2,11 +2,12 @@ pipeline {
     agent {
         node {
             label 'cm-linux'
-            tools {
-                maven 'linux/maven:Latest'
-                jdk 'linux/jdk11:Latest'
-            }
         }
+    }
+
+    tools {
+        maven 'linux/maven:Latest'
+        jdk 'linux/jdk11:Latest'
     }
 
     parameters {
