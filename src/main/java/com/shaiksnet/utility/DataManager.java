@@ -95,10 +95,6 @@ public class DataManager {
         return (ArrayList<ArrayList<String>>) context.get(key);
     }
 
-    public void getInteger (String key){
-
-    }
-
     /**
      * Clears all entries from the context map.
      */
