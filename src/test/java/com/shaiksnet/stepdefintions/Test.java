@@ -8,7 +8,7 @@ public class Test {
     @BeforeAll
     public static void beforeAll() {
         System.setProperty("bs_username", "shaikmahaboobsub_HYZDSt*)");
-        System.setProperty("bs_access_key", "KBJFMzHTAC3udHTnPa3*");
+        System.setProperty("bs_access_key", "*");
         System.setProperty("bs_proxy_user", "45");
         System.setProperty("bs_proxy_password", "Yucantcatchme");
         System.setProperty("mongo_username", "idldb_sit_user0B1");

@@ -1,12 +1,9 @@
 pipeline {
-    agent {
-        node {
-            label 'cm-linux'
-            tools {
-                maven 'linux/maven:Latest'
-                jdk 'linux/jdk11:Latest'
-            }
-        }
+    agent any
+
+    tools {
+        maven 'maven'      // Use your Maven tool name from Global Tool Configuration
+        jdk 'jdk22'        // Use your JDK tool name from Global Tool Configuration
     }
 
     parameters {
@@ -33,8 +30,8 @@ pipeline {
         stage('Setup Domain') {
             steps {
                 script {
-                    if (env.GIT_URL?.contains('account-information')) {
-                        env.DOMAIN = "IS-${params.TagName}"
+                    if (env.GIT_URL && env.GIT_URL.contains('visa')) {
+                        env.DOMAIN = "IS-${params.TagName ?: ''}"
                     }
                 }
             }
@@ -42,8 +39,15 @@ pipeline {
 
         stage('Print Tool Versions') {
             steps {
-                sh 'mvn -v'
-                sh 'java -version'
+                script {
+                    if (isUnix()) {
+                        sh 'mvn -v'
+                        sh 'java -version'
+                    } else {
+                        bat 'mvn -v'
+                        bat 'java -version'
+                    }
+                }
             }
         }
 
@@ -58,19 +62,17 @@ pipeline {
                         [$class: 'WipeWorkspace']
                     ],
                     userRemoteConfigs: [[
-                        url: 'https://your.repo.url/visa-monitoring.git',
+                        url: 'https://github.com/Mrshaik-hub/visaSlotMonitoring.git',
                         credentialsId: 'your_git_credentials'
                     ]]
                 ])
             }
         }
 
-        stage('Start BrowserstackLocal') {
+        stage('Start in Local or Grid') {
             when { expression { params.host != 'grid' } }
             steps {
-                script {
-                    echo 'Skipping BrowserStack setup for local runs (no need)'
-                }
+                echo 'Skipping BrowserStack setup for local runs (no need)'
             }
         }
 
@@ -78,20 +80,33 @@ pipeline {
             steps {
                 script {
                     try {
-                        echo '🟢 Starting Visa Slot Monitoring Script'
-                        sh """
-                            mvn clean install \
-                              -Denvironment=${params.ENVIRONMENT} \
-                              -DtagName=${params.TagName} \
-                              -DheadlessMode=${params.HEADLESS_MODE} \
-                              -Dhost=${params.host} \
-                              -DgridURL=${params.GRID_URL} \
-                              -Dmrs=${params.MRS_VALUE} \
-                              -Dmrt=${params.MRT_VALUE}
-                        """
-                        echo '✅ Visa Slot Monitoring Completed'
+                        echo 'Starting Visa Slot Monitoring Script'
+                        if (isUnix()) {
+                            sh """
+                                mvn clean install \\
+                                  -Denvironment=${params.ENVIRONMENT} \\
+                                  -DtagName=${params.TagName} \\
+                                  -DheadlessMode=${params.HEADLESS_MODE} \\
+                                  -Dhost=${params.host} \\
+                                  -DgridURL=${params.GRID_URL} \\
+                                  -Dmrs=${params.MRS_VALUE} \\
+                                  -Dmrt=${params.MRT_VALUE}
+                            """
+                        } else {
+                            bat """
+                                mvn clean install ^
+                                  -Denvironment=${params.ENVIRONMENT} ^
+                                  -DtagName=${params.TagName} ^
+                                  -DheadlessMode=${params.HEADLESS_MODE} ^
+                                  -Dhost=${params.host} ^
+                                  -DgridURL=${params.GRID_URL} ^
+                                  -Dmrs=${params.MRS_VALUE} ^
+                                  -Dmrt=${params.MRT_VALUE}
+                            """
+                        }
+                        echo 'Visa Slot Monitoring Completed'
                     } catch (e) {
-                        echo "❌ Visa Slot Monitoring Failed: ${e.message}"
+                        echo "Visa Slot Monitoring Failed: ${e.getMessage()}"
                         currentBuild.result = 'FAILURE'
                     }
                 }
@@ -102,8 +117,13 @@ pipeline {
             steps {
                 script {
                     try {
-                        def reportHtml = readFile('target/cucumber-html-reports/overview-features.html')
-                        def table = (reportHtml =~ /(<table[\s\S]*?<\/table>)/)[0]
+                        def reportFile = 'target/cucumber-html-reports/overview-features.html'
+                        if (!fileExists(reportFile)) {
+                            error("Report file not found: ${reportFile}")
+                        }
+                        def reportHtml = readFile(reportFile)
+                        def tableMatch = (reportHtml =~ /(<table[\s\S]*?<\/table>)/)
+                        def table = tableMatch ? tableMatch[0] : '<p>No table found in report!</p>'
                         table = table
                             .replaceAll(/<table\b[^>]*>/, '<table border="1" style="border-collapse: collapse; width: 100%;">')
                             .replaceAll(/<td\b[^>]*>/, '<td border="1">')
@@ -122,7 +142,8 @@ pipeline {
                         """
                         archiveArtifacts artifacts: 'summary_report.html', fingerprint: true
                     } catch (err) {
-                        echo "⚠️ Report generation failed: ${err.message}"
+                        echo "Report generation failed: ${err.getMessage()}"
+                        currentBuild.result = 'FAILURE'
                     }
                 }
             }
@@ -131,7 +152,44 @@ pipeline {
 
     post {
         always {
-            echo "🔚 Build completed with status: ${currentBuild.result ?: 'SUCCESS'}"
+            script {
+                def status = currentBuild.result ?: 'SUCCESS'
+                def reportLink = "${env.BUILD_URL}artifact/summary_report.html"
+                echo "Build completed with status: ${status}"
+
+                try {
+                    emailext(
+                        to: 'shaikmahaboobsubhani00@gmail.com',
+                        subject: "Visa Slot Monitor - Execution Summary | Build #${env.BUILD_NUMBER} | ${status}",
+                        body: """
+                            <html>
+                              <body>
+                                <h2>Visa Slot Monitoring - Execution Summary</h2>
+                                <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+                                  <tr><th>Execution Tag</th><td>${params.TagName}</td></tr>
+                                  <tr><th>Environment</th><td>${params.ENVIRONMENT}</td></tr>
+                                  <tr><th>Branch</th><td>${params.branch}</td></tr>
+                                  <tr><th>MRS Value</th><td>${params.MRS_VALUE}</td></tr>
+                                  <tr><th>MRT Value</th><td>${params.MRT_VALUE}</td></tr>
+                                  <tr><th>Host</th><td>${params.host}</td></tr>
+                                  <tr><th>Headless Mode</th><td>${params.HEADLESS_MODE}</td></tr>
+                                  <tr><th>Status</th><td><b style="color:${status == 'SUCCESS' ? 'green' : 'red'};">${status}</b></td></tr>
+                                </table>
+                                <br/>
+                                <p>Full Report: <a href="${reportLink}">Click here to view the complete HTML report</a></p>
+                                <br/>
+                                <p>Kindly contact <b>hshaik</b> for any queries.</p>
+                                <p>Thanks,<br/>Jenkins</p>
+                              </body>
+                            </html>
+                        """,
+                        mimeType: 'text/html',
+                        attachLog: true
+                    )
+                } catch (emailErr) {
+                    echo "Email sending failed: ${emailErr.getMessage()}"
+                }
+            }
         }
     }
 }
