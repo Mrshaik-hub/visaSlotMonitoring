@@ -152,19 +152,18 @@ pipeline {
 
     post {
         always {
-            // --- ADDED: Publish Cucumber HTML Report in Jenkins UI ---
-            if (fileExists('target/cucumber-html-reports/overview-features.html')) {
-                 publishHTML(target: [
-          reportDir: 'target/cucumber-html-reports',
-          reportFiles: 'overview-features.html',
-          reportName: 'Cucumber HTML Report'
-        ])
-      } else {
-        echo "Cucumber HTML report not found, skipping HTML publishing."
-      }
-            // --- End of HTML Publisher addition ---
-
             script {
+                // Check if Cucumber HTML report exists and publish if present
+                if (fileExists('target/cucumber-html-reports/overview-features.html')) {
+                    publishHTML(target: [
+                        reportDir: 'target/cucumber-html-reports',
+                        reportFiles: 'overview-features.html',
+                        reportName: 'Cucumber HTML Report'
+                    ])
+                } else {
+                    echo "Cucumber HTML report not found, skipping HTML publishing."
+                }
+
                 def status = currentBuild.result ?: 'SUCCESS'
                 def reportLink = "${env.BUILD_URL}artifact/summary_report.html"
                 echo "Build completed with status: ${status}"
