@@ -1,4 +1,15 @@
 pipeline {
+    agent none
+
+    options {
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        ansiColor('xterm')
+    }
+
+    triggers {
+        cron('H 2 * * *') // Runs daily at 2 AM
+    }
     agent {
         node {
             label 'cm-linux'

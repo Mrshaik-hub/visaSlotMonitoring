@@ -340,3 +340,17 @@
 2025-07-04 11:24:35 INFO  LoginPage:28 - OpenUrl Completed
 2025-07-04 11:24:36 INFO  Hooks:87 - Browser session terminated
 2025-07-04 11:24:36 INFO  Hooks:87 - Browser session terminated
+2025-07-04 11:43:39 INFO  Hooks:36 - Starting new browser session for scenario: USCheckVisaSlots_LoginPage
+2025-07-04 11:43:39 INFO  Hooks:36 - Starting new browser session for scenario: USCheckVisaSlots_LoginPage
+2025-07-04 11:43:41 INFO  Hooks:79 - Browser setup completed
+2025-07-04 11:43:41 INFO  Hooks:79 - Browser setup completed
+2025-07-04 11:43:41 INFO  LoginPage:25 - In OpenUrl
+2025-07-04 11:43:41 INFO  LoginPage:25 - In OpenUrl
+2025-07-04 11:43:42 INFO  LoginPage:28 - OpenUrl Completed
+2025-07-04 11:43:42 INFO  LoginPage:28 - OpenUrl Completed
+2025-07-04 11:43:42 INFO  LoginPage:25 - In OpenUrl
+2025-07-04 11:43:42 INFO  LoginPage:25 - In OpenUrl
+2025-07-04 11:43:43 INFO  LoginPage:28 - OpenUrl Completed
+2025-07-04 11:43:43 INFO  LoginPage:28 - OpenUrl Completed
+2025-07-04 11:43:43 INFO  Hooks:87 - Browser session terminated
+2025-07-04 11:43:43 INFO  Hooks:87 - Browser session terminated
