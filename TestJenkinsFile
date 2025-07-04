@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         maven 'maven'      // Use your Maven tool name from Global Tool Configuration
-        jdk 'jdk22'        // Use your JDK tool name from Global Tool Configuration
+        jdk 'jdk17'        // Use your JDK tool name from Global Tool Configuration
     }
 
     parameters {
@@ -152,6 +152,14 @@ pipeline {
 
     post {
         always {
+            // --- ADDED: Publish Cucumber HTML Report in Jenkins UI ---
+            publishHTML(target: [
+                reportDir: 'target/cucumber-html-reports',
+                reportFiles: 'overview-features.html',
+                reportName: 'Cucumber HTML Report'
+            ])
+            // --- End of HTML Publisher addition ---
+
             script {
                 def status = currentBuild.result ?: 'SUCCESS'
                 def reportLink = "${env.BUILD_URL}artifact/summary_report.html"
