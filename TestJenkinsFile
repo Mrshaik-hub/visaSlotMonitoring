@@ -119,31 +119,56 @@ pipeline {
                     try {
                         def reportFile = 'target/cucumber-html-reports/overview-features.html'
                         if (!fileExists(reportFile)) {
-                            error("Report file not found: ${reportFile}")
-                        }
-                        def reportHtml = readFile(reportFile)
-                        // Use a non-capturing group so tableMatch[0] is a string, not a list
-                        def tableMatch = (reportHtml =~ /<table[\s\S]*?<\/table>/)
-                        def table = tableMatch ? tableMatch[0] : '<p>No table found in report!</p>'
-                        table = table
-                            .replaceAll(/<table\b[^>]*>/, '<table border="1" style="border-collapse: collapse; width: 100%;">')
-                            .replaceAll(/<td\b[^>]*>/, '<td border="1">')
-                            .replaceAll(/<a\b[^>]*>/, '')
-                            .replaceAll(/<\/a>/, '')
+                            echo("Report file not found: ${reportFile}")
+                            writeFile file: 'summary_report.html', text: """
+                                <html><body>
+                                  <h2>No Report Found</h2>
+                                  <p>The expected report file <b>${reportFile}</b> was not generated.</p>
+                                  <p>Test Execution Tag: <b>${params.TagName}</b></p>
+                                  <p>Test Environment: <b>${params.ENVIRONMENT}</b></p>
+                                  <p>Please check the test logs for more details.</p>
+                                  <p>Thank you.</p>
+                                </body></html>
+                            """
+                            archiveArtifacts artifacts: 'summary_report.html', fingerprint: true
+                        } else {
+                            def reportHtml = readFile(reportFile)
+                            def tableMatch = (reportHtml =~ /<table[\s\S]*?<\/table>/)
+                            def table = tableMatch.find() ? tableMatch[0] : '<p>No table found in report!</p>'
+                            if (table instanceof java.util.regex.Matcher) {
+                                table = '<p>No table found in report!</p>'
+                            }
+                            table = table
+                                .replaceAll(/<table\b[^>]*>/, '<table border="1" style="border-collapse: collapse; width: 100%;">')
+                                .replaceAll(/<td\b[^>]*>/, '<td border="1">')
+                                .replaceAll(/<a\b[^>]*>/, '')
+                                .replaceAll(/<\/a>/, '')
 
+                            writeFile file: 'summary_report.html', text: """
+                                <html><body>
+                                  <h2>Note: Please download attachment for full report</h2>
+                                  <p>Test Execution Tag: <b>${params.TagName}</b></p>
+                                  <p>Test Environment: <b>${params.ENVIRONMENT}</b></p>
+                                  ${table}
+                                  <p>Kindly contact your Automation Team for questions.</p>
+                                  <p>Thank you.</p>
+                                </body></html>
+                            """
+                            archiveArtifacts artifacts: 'summary_report.html', fingerprint: true
+                        }
+                    } catch (err) {
+                        echo "Report generation failed: ${err.getMessage()}"
                         writeFile file: 'summary_report.html', text: """
                             <html><body>
-                              <h2>Note: Please download attachment for full report</h2>
+                              <h2>Report Generation Failed</h2>
+                              <p>Error: ${err.getMessage()}</p>
                               <p>Test Execution Tag: <b>${params.TagName}</b></p>
                               <p>Test Environment: <b>${params.ENVIRONMENT}</b></p>
-                              ${table}
-                              <p>Kindly contact your Automation Team for questions.</p>
+                              <p>Please check the test logs for more details.</p>
                               <p>Thank you.</p>
                             </body></html>
                         """
                         archiveArtifacts artifacts: 'summary_report.html', fingerprint: true
-                    } catch (err) {
-                        echo "Report generation failed: ${err.getMessage()}"
                         currentBuild.result = 'FAILURE'
                     }
                 }
