@@ -122,7 +122,8 @@ pipeline {
                             error("Report file not found: ${reportFile}")
                         }
                         def reportHtml = readFile(reportFile)
-                        def tableMatch = (reportHtml =~ /(<table[\s\S]*?<\/table>)/)
+                        // Use a non-capturing group so tableMatch[0] is a string, not a list
+                        def tableMatch = (reportHtml =~ /<table[\s\S]*?<\/table>/)
                         def table = tableMatch ? tableMatch[0] : '<p>No table found in report!</p>'
                         table = table
                             .replaceAll(/<table\b[^>]*>/, '<table border="1" style="border-collapse: collapse; width: 100%;">')
