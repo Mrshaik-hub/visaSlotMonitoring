@@ -113,23 +113,22 @@ pipeline {
             }
         }
 
-        stage('Archive and Publish Report') {
-      steps {
-        script {
-          // Archive the report file
-          archiveArtifacts artifacts: 'test-output/index.html', fingerprint: true
+        stage('Publish HTML Report') {
+  steps {
+    script {
+      // Optional: verify folder
+      bat 'dir target\\extent-report\\extent.html'
 
-          // Publish the HTML report to Jenkins UI
-          publishHTML(target: [
-            reportName : 'Test Report',
-            reportDir  : 'test-output',
-            reportFiles: 'index.html',
-            keepAll    : true,
-            alwaysLinkToLastBuild: true
-          ])
-        }
-      }
+      publishHTML(target: [
+        reportName : 'Test Report',
+        reportDir  : 'target/extent-report',
+        reportFiles: 'extent.html',
+        keepAll    : true,
+        alwaysLinkToLastBuild: true
+      ])
     }
+  }
+}
 
         stage('Generate and Publish Reports') {
             steps {
