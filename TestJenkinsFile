@@ -113,6 +113,24 @@ pipeline {
             }
         }
 
+        stage('Archive and Publish Report') {
+      steps {
+        script {
+          // Archive the report file
+          archiveArtifacts artifacts: 'test-output/index.html', fingerprint: true
+
+          // Publish the HTML report to Jenkins UI
+          publishHTML(target: [
+            reportName : 'Test Report',
+            reportDir  : 'test-output',
+            reportFiles: 'index.html',
+            keepAll    : true,
+            alwaysLinkToLastBuild: true
+          ])
+        }
+      }
+    }
+
         stage('Generate and Publish Reports') {
             steps {
                 script {
@@ -176,23 +194,6 @@ pipeline {
         }
     }
 
-  stage('Archive and Publish Report') {
-      steps {
-        script {
-          // Archive the report file
-          archiveArtifacts artifacts: 'test-output/index.html', fingerprint: true
-
-          // Publish the HTML report to Jenkins UI
-          publishHTML(target: [
-            reportName : 'Test Report',
-            reportDir  : 'test-output',
-            reportFiles: 'index.html',
-            keepAll    : true,
-            alwaysLinkToLastBuild: true
-          ])
-        }
-      }
-    }
 
     post {
         always {
