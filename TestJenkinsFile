@@ -113,23 +113,18 @@ pipeline {
             }
         }
 
-        stage('Publish HTML Report') {
+    stage('Publish Cucumber HTML Report') {
   steps {
-    script {
-      // Optional: verify folder
-      bat 'dir target\\extent-report\\extent.html'
-
-      publishHTML(target: [
-        reportName : 'Test Report',
-        reportDir  : 'target/extent-report',
-        reportFiles: 'extent.html',
-        keepAll    : true,
-        alwaysLinkToLastBuild: true
-      ])
-    }
+    publishHTML(target: [
+      reportName: 'Cucumber Report',
+      reportDir: 'target/cucumber-html-report',
+      reportFiles: 'overview-features.html',
+      keepAll: true,
+      alwaysLinkToLastBuild: true,
+      allowMissing: false
+    ])
   }
 }
-
         stage('Generate and Publish Reports') {
             steps {
                 script {
